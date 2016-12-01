@@ -9,7 +9,7 @@ class Modal {
 class user extends Modal {
   constructor() {
     super()
-    this.username = faker.internet.userName()
+    this.username = `用户 ${faker.internet.userName()}`
     this.age = _.random(18, 40)
   }
 }
@@ -17,35 +17,35 @@ class user extends Modal {
 class organization extends Modal {
   constructor() {
     super()
-    this.name = faker.company.companyName()
+    this.name = `公司 ${faker.company.companyName()}`
   }
 }
 
 class project extends Modal {
   constructor() {
     super()
-    this.name = faker.lorem.words()
+    this.name = `项目 ${faker.lorem.words()}`
   }
 }
 
 class activity extends Modal {
   constructor() {
     super()
-    this.name = faker.lorem.words()
+    this.name = `记录 ${faker.lorem.words()}`
   }
 }
 
 class achievement extends Modal {
   constructor() {
     super()
-    this.name = faker.lorem.words()
+    this.name = `成果 ${faker.lorem.words()}`
   }
 }
 
 class conversion extends Modal {
   constructor() {
     super()
-    this.name = faker.lorem.words()
+    this.name = `转化 ${faker.lorem.words()}`
   }
 }
 

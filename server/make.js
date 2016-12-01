@@ -6,9 +6,11 @@ import traverse from 'traverse'
 
 import isSingular from 'is-singular'
 
-function make(entities = {}, models = {}, options = {}) {
+import jsonfile from 'jsonfile'
 
-  if (!_.isObject(entities) || _.isEmpty(entities)) throw new Error('entities should be a non-empty object')
+jsonfile.spaces = 4
+
+function make(entities = {}, models = {}, options = {}, write = false) {
 
   const dataset = {}
 
@@ -60,6 +62,17 @@ function make(entities = {}, models = {}, options = {}) {
     }
 
   })
+
+  if (write) {
+    setTimeout(function () {
+      const cwd = process.cwd()
+      const folder = (Meteor.isDevelopment ? cwd.replace(/\/\.meteor.*/, '') : cwd) + '/.dummies/'
+      _.forEach(dataset, (v, k) => {
+        console.log(folder + k)
+        jsonfile.writeFile(`${folder}${k}.json`, v)
+      })
+    }, 0)
+  }
 
   return dataset
 
