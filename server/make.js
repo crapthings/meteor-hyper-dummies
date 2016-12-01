@@ -4,8 +4,6 @@ import { en as lingo } from 'lingo'
 
 import traverse from 'traverse'
 
-import isSingular from 'is-singular'
-
 import jsonfile from 'jsonfile'
 
 jsonfile.spaces = 4
@@ -21,80 +19,125 @@ function make(entities = {}, models = {}, options = {}, write = false) {
     const self = this
 
     const key = self.key
-    self._singularizedKey = singularize(key)
-    self._pluralizedKey = pluralize(self._singularizedKey)
+    self._sKey = singularize(key)
+    self._pKey = pluralize(self._sKey)
 
-    if (!_.includes(self.key, '___')) {
-      dataset[self._pluralizedKey] = dataset[self._pluralizedKey] || []
+    if (_.includes(self.key, '___')) return
+
+    if (!models[self._sKey]) {
+      console.log(self._sKey, ' not found, skipped...')
+      return
     }
 
-    if (models[self._singularizedKey]) {
+    dataset[self._pKey] = dataset[self._pKey] || []
 
-      if (lingo.isSingular(self.key)) {
+    const parent = self.parent
+    const parentData = self.parent._data || {}
+    const parentKey = self.parent.key
+    const parentSKey = self.parent._sKey
+    const parentPKey = self.parent._pKey
+    const refNameSuffix = getNodeKeyRefName(parent)
+    const refName = `${isSingular(parentSKey) ? parentSKey : parentPKey}${refNameSuffix}`
 
-        self._datum = new models[self._singularizedKey]()
-
-        if (self.parent._datum) {
-          const refName = self.node.___ref ? self.node.___ref : self.parent._singularizedKey + 'Id'
-          self._datum[refName] = self.parent._datum._id
-        }
-
-        dataset[self._pluralizedKey].push(self._datum)
-
-      } else {
-
-        if (self.parent._datum) {
-          const data = _.times(3, n => {
-            return setRefId(self.parent._datum._id)
-          })
-          self._data = data
-          dataset[self._pluralizedKey] = _.concat(dataset[self._pluralizedKey], data)
-        }
-
-        if (self.parent._data) {
-          const data = _.map(self.parent._data, d => {
-            const datum = new models[self._singularizedKey]()
-            const refName = self.node.___ref ? self.node.___ref : self.parent._singularizedKey + 'Ids'
-            datum[refName] = d._id
-            return datum
-          })
-          self._data = data
-          dataset[self._pluralizedKey] = _.concat(dataset[self._pluralizedKey], data)
-        }
-
-        // const data = _.times(10, n => {
-        //   const datum = new models[self._singularizedKey]()
-
-        //   if (self.parent._data) {
-        //     const refName = self.node.___ref ? self.node.___ref : self.parent._singularizedKey + 'Ids'
-        //     const maxSampleSize = _.random(1, self.parent._data.length)
-        //     datum[refName] = _(self.parent._data).map('_id').sampleSize(maxSampleSize).value()
-        //   }
-
-        //   return datum
-        // })
-
-        // self._data = data
-
-        // dataset[self._pluralizedKey] = _.concat(dataset[self._pluralizedKey], data)
-
-      }
-
+    if (_.isEmpty(parentData)) {
+      console.log(key, ' is empty')
+      self._data = isSingular(key)
+        ?
+          function () {
+            const data = getModel(models[self._sKey])
+            dataset[self._pKey].push(data)
+            return data
+          }()
+        :
+          function () {
+            const data = _.times(3, n => getModel(models[self._sKey]))
+            dataset[self._pKey] = _.flatten(dataset[self._pKey].concat(data))
+            return data
+          }()
     }
 
-    function setRefId(id) {
-      const datum = new models[self._singularizedKey]()
-      const refName = self.node.___ref ? self.node.___ref : self.parent._singularizedKey + 'Ids'
-      datum[refName] = id
-      return datum
+    if (parentData._id) {
+
+      self._data = isSingular(key)
+        ?
+          function () {
+            const data = getModel(models[self._sKey])
+            data[refName] = parentData._id
+            dataset[self._pKey].push(data)
+            return data
+          }()
+        :
+          function () {
+            const data = _.times(3, n => {
+              const data = getModel(models[self._sKey])
+              data[refName] = parentData._id
+              return data
+            })
+            dataset[self._pKey] = _.flatten(dataset[self._pKey].concat(data))
+            return data
+          }()
+    }
+
+    if (_.isArray(parentData)) {
+      console.log(key, ' isArray')
+      self._data = isSingular(key)
+        ?
+          function () {
+            const data = _.map(parentData, d => {
+              const data = getModel(models[self._sKey])
+              data[refName] = d._id
+              return data
+            })
+            dataset[self._pKey] = _.flatten(dataset[self._pKey].concat(data))
+            return data
+          }()
+        :
+          function () {
+            const data = _.map(parentData, d => {
+              return _.times(3, n => {
+                const data = getModel(models[self._sKey])
+                data[refName] = d._id
+                return data
+              })
+            })
+            dataset[self._pKey] = _.flatten(dataset[self._pKey].concat(_.flatten(data)))
+            return data
+          }()
+
     }
 
   })
 
-  if (write) writeFiles(dataset)
+  const _dataset = _(dataset).omitBy(_.isEmpty).value()
 
-  return dataset
+  if (_.isEmpty(_dataset)) return
 
+  if (write) writeFiles(_dataset)
+
+  return _dataset
+
+}
+
+function attachRef(model, ref) {
+
+}
+
+function getModel(model) {
+  return new model()
+}
+
+function getNodeKeyRefName(node) {
+  if (_.isEmpty(node)) return
+
+  if (node.___ref) {
+    return node.___ref
+  }
+
+  return isSingular(node.key) ? 'Id' : 'Ids'
+}
+
+function isSingular(string) {
+  return lingo.isSingular(string)
 }
 
 function singularize(string) {
