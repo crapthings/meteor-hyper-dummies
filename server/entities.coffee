@@ -20,6 +20,6 @@ entities =
 
 dataset = make entities, models, {}, true
 
-# console.log(JSON.stringify entities, null ,2)
+console.log(JSON.stringify entities, null ,2)
 
-# console.log(JSON.stringify dataset, null ,2)
+console.log(JSON.stringify dataset, null ,2)

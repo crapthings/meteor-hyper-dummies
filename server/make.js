@@ -33,8 +33,6 @@ function make(entities = {}, models = {}, options = {}, write = false) {
 
     dataset[self._pKey] = dataset[self._pKey] || []
 
-    // console.log('上层有数据 ', this.path, typeof self.parent._data, self.parent._data)
-
     if (self.parent._data) {
 
       const parentData = self.parent._data
@@ -63,8 +61,6 @@ function make(entities = {}, models = {}, options = {}, write = false) {
       }
 
       if (is.array(parentData)) {
-
-        // console.log(JSON.stringify(parentData, null, 4))
 
         self._data = isSingular(key)
           ?
@@ -95,7 +91,7 @@ function make(entities = {}, models = {}, options = {}, write = false) {
       }
 
     } else {
-      // console.log('why', this.key, this.path, this.parent.key)
+
       self._data = isSingular(key)
         ?
           function () {
@@ -112,22 +108,6 @@ function make(entities = {}, models = {}, options = {}, write = false) {
 
     }
 
-    // if (parentData._id) {
-
-    //   const refNameSuffix = getNodeRefName(parent)
-    //   const refName = `${isSingular(parentSKey) ? parentSKey : parentPKey}${refNameSuffix}`
-
-
-    // }
-
-    // if (_.isArray(parentData)) {
-    //   console.log(key, ' isArray')
-    //   const refNameSuffix = getNodeRefName(parent)
-    //   const refName = `${isSingular(parentSKey) ? parentSKey : parentPKey}${refNameSuffix}`
-
-
-    // }
-
   })
 
   const _dataset = _(dataset).omitBy(_.isEmpty).value()
@@ -137,10 +117,6 @@ function make(entities = {}, models = {}, options = {}, write = false) {
   if (write) writeFiles(_dataset)
 
   return _dataset
-
-}
-
-function attachRef(model, ref) {
 
 }
 
