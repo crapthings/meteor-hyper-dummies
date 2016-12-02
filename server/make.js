@@ -14,6 +14,10 @@ function make(entities = {}, models = {}, options = {}, write = false) {
 
   const dataset = {}
 
+  options = _.defaults(options, {
+    defaultNodeSize: 3,
+  })
+
   traverse(entities).forEach(function (entity) {
 
     if (_.isEmpty(this.key)) return
@@ -49,7 +53,7 @@ function make(entities = {}, models = {}, options = {}, write = false) {
             }()
           :
             function () {
-              const data = _.times(3, n => {
+              const data = _.times(options.defaultNodeSize, n => {
                 const data = getModel(models[self._sKey])
                 data[defaultRefName] = self.node.___refKey || parentData._id
                 return data
@@ -77,7 +81,7 @@ function make(entities = {}, models = {}, options = {}, write = false) {
             function () {
               const data = _(parentData)
               .map(d => {
-                return _.times(3, n => {
+                return _.times(options.defaultNodeSize, n => {
                   const data = getModel(models[self._sKey])
                   data[defaultRefName] = d[self.node.___refKey] || d._id
                   return data
@@ -101,7 +105,7 @@ function make(entities = {}, models = {}, options = {}, write = false) {
           }()
         :
           function () {
-            const data = _.times(3, n => getModel(models[self._sKey]))
+            const data = _.times(options.defaultNodeSize, n => getModel(models[self._sKey]))
             dataset[self._pKey] = _.concat(dataset[self._pKey], data)
             return data
           }()
