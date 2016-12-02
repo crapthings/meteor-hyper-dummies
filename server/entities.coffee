@@ -5,8 +5,11 @@ import models from './models'
 entities =
   user:
     organization:
+      ___refName: 'ownerId'
       users:
         organizations:
+          ___refName: 'parentId'
+          ___refKey: 'organizationId'
           users:
             projects:
               activities: {}

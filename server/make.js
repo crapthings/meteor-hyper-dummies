@@ -71,7 +71,7 @@ function make(entities = {}, models = {}, options = {}, write = false) {
             function () {
               const data = _.map(parentData, d => {
                 const data = getModel(models[self._sKey])
-                data[defaultRefName] = d._id
+                data[defaultRefName] = d[self.node.___refKey] || d._id
                 return data
               })
               dataset[self._pKey] = _.concat(dataset[self._pKey], data)
@@ -83,7 +83,7 @@ function make(entities = {}, models = {}, options = {}, write = false) {
               .map(d => {
                 return _.times(3, n => {
                   const data = getModel(models[self._sKey])
-                  data[defaultRefName] = d._id
+                  data[defaultRefName] = d[self.node.___refKey] || d._id
                   return data
                 })
               })
