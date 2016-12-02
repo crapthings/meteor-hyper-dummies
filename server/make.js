@@ -6,6 +6,8 @@ import traverse from 'traverse'
 
 import jsonfile from 'jsonfile'
 
+import is from 'is_js'
+
 jsonfile.spaces = 4
 
 function make(entities = {}, models = {}, options = {}, write = false) {
@@ -31,16 +33,69 @@ function make(entities = {}, models = {}, options = {}, write = false) {
 
     dataset[self._pKey] = dataset[self._pKey] || []
 
-    const parent = self.parent
-    const parentData = self.parent._data || {}
-    const parentKey = self.parent.key
-    const parentSKey = self.parent._sKey
-    const parentPKey = self.parent._pKey
-    const refNameSuffix = getNodeKeyRefName(parent)
-    const refName = `${isSingular(parentSKey) ? parentSKey : parentPKey}${refNameSuffix}`
+    // console.log('上层有数据 ', this.path, typeof self.parent._data, self.parent._data)
 
-    if (_.isEmpty(parentData)) {
-      console.log(key, ' is empty')
+    if (self.parent._data) {
+
+      const parentData = self.parent._data
+      const defaultRefName = self.node.___refName || self.parent._sKey + 'Id'
+
+      if (is.json(parentData)) {
+        self._data = isSingular(key)
+          ?
+            function () {
+              const data = getModel(models[self._sKey])
+              data[defaultRefName] = self.node.___refKey || parentData._id
+              dataset[self._pKey].push(data)
+              return data
+            }()
+          :
+            function () {
+              const data = _.times(3, n => {
+                const data = getModel(models[self._sKey])
+                data[defaultRefName] = self.node.___refKey || parentData._id
+                return data
+              })
+              dataset[self._pKey] = _.concat(dataset[self._pKey], data)
+
+              return data
+            }()
+      }
+
+      if (is.array(parentData)) {
+
+        // console.log(JSON.stringify(parentData, null, 4))
+
+        self._data = isSingular(key)
+          ?
+            function () {
+              const data = _.map(parentData, d => {
+                const data = getModel(models[self._sKey])
+                data[defaultRefName] = d._id
+                return data
+              })
+              dataset[self._pKey] = _.concat(dataset[self._pKey], data)
+              return data
+            }()
+          :
+            function () {
+              const data = _(parentData)
+              .map(d => {
+                return _.times(3, n => {
+                  const data = getModel(models[self._sKey])
+                  data[defaultRefName] = d._id
+                  return data
+                })
+              })
+              .flatten()
+              .value()
+              dataset[self._pKey] = _.concat(dataset[self._pKey], data)
+              return data
+            }()
+      }
+
+    } else {
+      // console.log('why', this.key, this.path, this.parent.key)
       self._data = isSingular(key)
         ?
           function () {
@@ -51,60 +106,27 @@ function make(entities = {}, models = {}, options = {}, write = false) {
         :
           function () {
             const data = _.times(3, n => getModel(models[self._sKey]))
-            dataset[self._pKey] = _.flatten(dataset[self._pKey].concat(data))
-            return data
-          }()
-    }
-
-    if (parentData._id) {
-
-      self._data = isSingular(key)
-        ?
-          function () {
-            const data = getModel(models[self._sKey])
-            data[refName] = parentData._id
-            dataset[self._pKey].push(data)
-            return data
-          }()
-        :
-          function () {
-            const data = _.times(3, n => {
-              const data = getModel(models[self._sKey])
-              data[refName] = parentData._id
-              return data
-            })
-            dataset[self._pKey] = _.flatten(dataset[self._pKey].concat(data))
-            return data
-          }()
-    }
-
-    if (_.isArray(parentData)) {
-      console.log(key, ' isArray')
-      self._data = isSingular(key)
-        ?
-          function () {
-            const data = _.map(parentData, d => {
-              const data = getModel(models[self._sKey])
-              data[refName] = d._id
-              return data
-            })
-            dataset[self._pKey] = _.flatten(dataset[self._pKey].concat(data))
-            return data
-          }()
-        :
-          function () {
-            const data = _.map(parentData, d => {
-              return _.times(3, n => {
-                const data = getModel(models[self._sKey])
-                data[refName] = d._id
-                return data
-              })
-            })
-            dataset[self._pKey] = _.flatten(dataset[self._pKey].concat(_.flatten(data)))
+            dataset[self._pKey] = _.concat(dataset[self._pKey], data)
             return data
           }()
 
     }
+
+    // if (parentData._id) {
+
+    //   const refNameSuffix = getNodeRefName(parent)
+    //   const refName = `${isSingular(parentSKey) ? parentSKey : parentPKey}${refNameSuffix}`
+
+
+    // }
+
+    // if (_.isArray(parentData)) {
+    //   console.log(key, ' isArray')
+    //   const refNameSuffix = getNodeRefName(parent)
+    //   const refName = `${isSingular(parentSKey) ? parentSKey : parentPKey}${refNameSuffix}`
+
+
+    // }
 
   })
 
@@ -126,7 +148,7 @@ function getModel(model) {
   return new model()
 }
 
-function getNodeKeyRefName(node) {
+function getNodeRefName(node) {
   if (_.isEmpty(node)) return
 
   if (node.___ref) {

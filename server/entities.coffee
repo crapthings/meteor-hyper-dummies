@@ -4,11 +4,19 @@ import models from './models'
 
 entities =
   user:
-    organizations: {}
-
+    organization:
+      users:
+        organizations:
+          users:
+            projects:
+              activities: {}
+              achievements: {}
+              conversions: {}
+            achievements: {}
+            conversions: {}
 
 dataset = make entities, models, {}, true
 
 # console.log(JSON.stringify entities, null ,2)
 
-console.log(JSON.stringify dataset, null ,2)
+# console.log(JSON.stringify dataset, null ,2)
