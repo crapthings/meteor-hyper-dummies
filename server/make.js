@@ -30,9 +30,17 @@ function make(entities = {}, models = {}, options = {}, write = false) {
 
     if (_.includes(self.key, '___')) return
 
-    if (!models[self._sKey]) {
-      console.log(self._sKey, ' not found, skipped...')
+    if (!models[self._sKey] && !models['___model']) {
+      console.log(self._sKey, ' model not found, default one not found, skipped...')
       return
+    }
+
+    if (!models[self._sKey]) {
+      console.log(self._sKey, ' not found, use ___model from models')
+    }
+
+    function getDefaultModel() {
+      return getModel(models[self._sKey] || models['___model'])
     }
 
     dataset[self._pKey] = dataset[self._pKey] || []
@@ -46,7 +54,7 @@ function make(entities = {}, models = {}, options = {}, write = false) {
         self._data = isSingular(key)
           ?
             function () {
-              const data = getModel(models[self._sKey])
+              const data = getDefaultModel()
               data[defaultRefName] = self.node.___refKey || parentData._id
               dataset[self._pKey].push(data)
               return data
@@ -54,7 +62,7 @@ function make(entities = {}, models = {}, options = {}, write = false) {
           :
             function () {
               const data = _.times(options.defaultNodeSize, n => {
-                const data = getModel(models[self._sKey])
+                const data = getDefaultModel()
                 data[defaultRefName] = self.node.___refKey || parentData._id
                 return data
               })
@@ -70,7 +78,7 @@ function make(entities = {}, models = {}, options = {}, write = false) {
           ?
             function () {
               const data = _.map(parentData, d => {
-                const data = getModel(models[self._sKey])
+                const data = getDefaultModel()
                 data[defaultRefName] = d[self.node.___refKey] || d._id
                 return data
               })
@@ -82,7 +90,7 @@ function make(entities = {}, models = {}, options = {}, write = false) {
               const data = _(parentData)
               .map(d => {
                 return _.times(options.defaultNodeSize, n => {
-                  const data = getModel(models[self._sKey])
+                  const data = getDefaultModel()
                   data[defaultRefName] = d[self.node.___refKey] || d._id
                   return data
                 })
@@ -99,13 +107,13 @@ function make(entities = {}, models = {}, options = {}, write = false) {
       self._data = isSingular(key)
         ?
           function () {
-            const data = getModel(models[self._sKey])
+            const data = getDefaultModel()
             dataset[self._pKey].push(data)
             return data
           }()
         :
           function () {
-            const data = _.times(options.defaultNodeSize, n => getModel(models[self._sKey]))
+            const data = _.times(options.defaultNodeSize, n => getDefaultModel())
             dataset[self._pKey] = _.concat(dataset[self._pKey], data)
             return data
           }()

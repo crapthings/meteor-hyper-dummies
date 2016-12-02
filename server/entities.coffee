@@ -1,22 +1,27 @@
+import faker from 'faker'
 import make from './make'
 
-import models from './models'
-
 entities =
-  user:
-    organization:
-      ___refName: 'ownerId'
-      users:
-        organizations:
-          ___refName: 'parentId'
-          ___refKey: 'organizationId'
-          users:
-            projects:
-              activities: {}
-              achievements: {}
-              conversions: {}
-            achievements: {}
-            conversions: {}
+  categories:
+    subcategories:
+      authors:
+        books:
+          orders: {}
+
+class Model
+  constructor: ->
+    @_id = Random.id()
+    @name = faker.lorem.words()
+    @createdAt = faker.date.past()
+
+models =
+  ___model: class model extends Model
+    constructor: ->
+      super
+
+  category: class model extends Model
+    constructor: ->
+      super
 
 dataset = make entities, models, {}, true
 
