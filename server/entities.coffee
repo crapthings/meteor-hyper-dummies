@@ -5,6 +5,7 @@ entities =
   categories:
     subcategories:
       authors:
+        # ___refMap: ['categoryId', 'name']
         books:
           orders: {}
 
